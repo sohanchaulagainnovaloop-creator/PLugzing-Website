@@ -35,12 +35,12 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('NestJS Boilerplate API')
-    .setDescription('Reusable NestJS API documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+const config = new DocumentBuilder()
+  .setTitle('Plugzing API')
+  .setDescription('Plugzing Backend API')
+  .setVersion('1.0')
+  .addBearerAuth()
+  .build();
 
   const document = SwaggerModule.createDocument(app, config);
 

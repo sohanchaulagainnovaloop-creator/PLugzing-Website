@@ -1,4 +1,3 @@
-
 import {
   ConflictException,
   UnauthorizedException,
@@ -11,12 +10,21 @@ jest.mock('@nestjs/jwt', () => ({
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
+jest.mock('../../email/services/email.service', () => ({
+  EmailService: class EmailService {
+    sendEmail = jest.fn();
+  },
 }));
 
 import { AuthService } from './auth.service';
 import { UsersService } from '../../users/services/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../../email/services/email.service';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from '../enums/user-role.enum';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -27,17 +35,36 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+
         {
           provide: UsersService,
           useValue: {
             findByEmail: jest.fn(),
             create: jest.fn(),
+            findById: jest.fn(),
+            updateRefreshTokenHash: jest.fn(),
+            clearRefreshToken: jest.fn(),
+            updatePasswordResetToken: jest.fn(),
+            findByResetToken: jest.fn(),
+            updatePassword: jest.fn(),
+            updateEmailVerificationToken: jest.fn(),
+            findByEmailVerificationToken: jest.fn(),
+            verifyUserEmail: jest.fn(),
           },
         },
+
         {
           provide: JwtService,
           useValue: {
             signAsync: jest.fn(),
+            verifyAsync: jest.fn(),
+          },
+        },
+
+        {
+          provide: EmailService,
+          useValue: {
+            sendEmail: jest.fn(),
           },
         },
       ],
@@ -58,6 +85,7 @@ describe('AuthService', () => {
         id: 1,
         name: 'Sohan',
         email: 'sohan@example.com',
+        role: UserRole.USER,
       } as any;
 
       usersService.findByEmail.mockResolvedValue(null);
@@ -85,6 +113,7 @@ describe('AuthService', () => {
           id: 1,
           name: 'Sohan',
           email: 'sohan@example.com',
+          role: UserRole.USER,
         },
       });
     });
@@ -94,6 +123,7 @@ describe('AuthService', () => {
         id: 1,
         name: 'Sohan',
         email: 'sohan@example.com',
+        role: UserRole.USER,
       } as any);
 
       await expect(
@@ -109,19 +139,23 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('should return access token with valid credentials', async () => {
+    it('should return access and refresh tokens with valid credentials', async () => {
       const user = {
         id: 1,
         name: 'Sohan',
         email: 'sohan@example.com',
         password: 'hashed-password',
+        role: UserRole.USER,
+        isEmailVerified: true,
       } as any;
 
       usersService.findByEmail.mockResolvedValue(user);
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      jwtService.signAsync.mockResolvedValue('test-jwt-token');
+      jwtService.signAsync
+        .mockResolvedValueOnce('test-access-token')
+        .mockResolvedValueOnce('test-refresh-token');
 
       const result = await service.login(
         'sohan@example.com',
@@ -137,10 +171,13 @@ describe('AuthService', () => {
         'hashed-password',
       );
 
-      expect(jwtService.signAsync).toHaveBeenCalled();
+      expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
+
+      expect(usersService.updateRefreshTokenHash).toHaveBeenCalled();
 
       expect(result).toEqual({
-        accessToken: 'test-jwt-token',
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
       });
     });
 
@@ -163,6 +200,8 @@ describe('AuthService', () => {
         name: 'Sohan',
         email: 'sohan@example.com',
         password: 'hashed-password',
+        role: UserRole.USER,
+        isEmailVerified: true,
       } as any;
 
       usersService.findByEmail.mockResolvedValue(user);
@@ -178,26 +217,50 @@ describe('AuthService', () => {
 
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
+
+    it('should throw UnauthorizedException when email is not verified', async () => {
+      const user = {
+        id: 1,
+        name: 'Sohan',
+        email: 'sohan@example.com',
+        password: 'hashed-password',
+        role: UserRole.USER,
+        isEmailVerified: false,
+      } as any;
+
+      usersService.findByEmail.mockResolvedValue(user);
+
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await expect(
+        service.login(
+          'sohan@example.com',
+          'password123',
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(jwtService.signAsync).not.toHaveBeenCalled();
+    });
   });
 
   describe('generateToken', () => {
-    it('should generate an access token', async () => {
-      jwtService.signAsync.mockResolvedValue('test-jwt-token');
+    it('should generate access and refresh tokens', async () => {
+      jwtService.signAsync
+        .mockResolvedValueOnce('test-access-token')
+        .mockResolvedValueOnce('test-refresh-token');
 
       const result = await service.generateToken(
         1,
         'sohan@example.com',
+        UserRole.USER,
       );
 
-      expect(jwtService.signAsync).toHaveBeenCalledWith({
-        sub: 1,
-        email: 'sohan@example.com',
-      });
+      expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
 
       expect(result).toEqual({
-        accessToken: 'test-jwt-token',
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
       });
     });
   });
 });
-

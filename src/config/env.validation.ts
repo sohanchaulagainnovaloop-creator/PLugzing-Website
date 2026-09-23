@@ -9,33 +9,24 @@ export const envValidationSchema = Joi.object({
 
   // Database
   DB_HOST: Joi.string().required(),
-
   DB_PORT: Joi.number().default(5432),
-
   DB_USERNAME: Joi.string().required(),
-
   DB_PASSWORD: Joi.string().allow('').required(),
-
   DB_DATABASE: Joi.string().required(),
 
   // JWT
   JWT_SECRET: Joi.string().required(),
-
-  JWT_EXPIRES_IN: Joi.string().default('1d'),
+  JWT_REFRESH_SECRET: Joi.string().required(),
+  JWT_EXPIRES_IN: Joi.string().default('15m'),
 
   // CORS
   CORS_ORIGIN: Joi.string().required(),
 
-  // Mailtrap / SMTP
+  // Mail / SMTP
   MAIL_HOST: Joi.string().required(),
-
   MAIL_PORT: Joi.number().default(2525),
-
   MAIL_USERNAME: Joi.string().required(),
-
   MAIL_PASSWORD: Joi.string().required(),
-
   MAIL_FROM_EMAIL: Joi.string().email().required(),
-
   MAIL_FROM_NAME: Joi.string().required(),
 });

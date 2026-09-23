@@ -1,31 +1,31 @@
 ﻿services:
   postgres:
     image: postgres:17
-    container_name: nestjs_boilerplate_postgres
+    container_name: plugzing_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: nestjs_boilerplate
+      POSTGRES_DB: plugzing
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - plugzing_postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
-    container_name: nestjs_boilerplate_redis
+    container_name: plugzing_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - plugzing_redis_data:/data
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nestjs_boilerplate_app
+    container_name: plugzing_app
     ports:
       - "3000:3000"
     env_file:
@@ -39,5 +39,5 @@
       - redis
 
 volumes:
-  postgres_data:
-  redis_data:
+  plugzing_postgres_data:
+  plugzing_redis_data:

@@ -7,12 +7,10 @@ import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 
 import { AuthController } from './controllers/auth.controller';
-
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
-import { PermissionsGuard } from './guards/permissions.guard';
 
 import { AuthService } from './services/auth.service';
 
@@ -37,8 +35,6 @@ import { AuthService } from './services/auth.service';
     }),
 
     UsersModule,
-
-    // EmailModule provides EmailService
     EmailModule,
   ],
 
@@ -49,7 +45,6 @@ import { AuthService } from './services/auth.service';
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,
-    PermissionsGuard,
   ],
 
   exports: [
@@ -58,7 +53,6 @@ import { AuthService } from './services/auth.service';
     JwtModule,
     JwtAuthGuard,
     RolesGuard,
-    PermissionsGuard,
   ],
 })
 export class AuthModule {}
