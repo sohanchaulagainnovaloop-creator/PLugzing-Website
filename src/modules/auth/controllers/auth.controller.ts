@@ -195,14 +195,14 @@ export class AuthController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Verification email generated successfully',
+    description: 'Verification email sent successfully',
   })
   @ApiResponse({
     status: 401,
     description: 'User not found',
   })
-  async sendVerificationEmail(@Body('userId') userId: number) {
-    return this.authService.sendVerificationEmail(Number(userId));
+  async sendVerificationEmail(@Body('email') email: string) {
+    return this.authService.sendVerificationEmail(email);
   }
 
   // ============================================================

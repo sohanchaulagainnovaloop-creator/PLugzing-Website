@@ -175,8 +175,8 @@ export class AuthService {
   // SEND VERIFICATION EMAIL
   // ============================================================
 
-  async sendVerificationEmail(userId: number) {
-    const user = await this.usersService.findById(userId);
+  async sendVerificationEmail(email: string) {
+    const user = await this.usersService.findByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException('User not found');
